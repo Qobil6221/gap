@@ -16,7 +16,8 @@ class UserRegisterForm(ModelForm):
     class Meta:
         model = User
         fields = ("avatar", "username", "first_name", "last_name", "email")
-        
+
+
 class UserLoginForm(Form):
     username = CharField(max_length=128)
     password = CharField(max_length=128, widget=PasswordInput)
