@@ -1,8 +1,12 @@
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views import View
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth import authenticate,login
+from django.contrib import messages
 
 from apps.gap.models import Room, Opinion, Comment, OpinionLike
+from apps.gap.form import UserLoginForm, UserRegisterForm
 
 
 class RoomListView(View):
@@ -41,3 +45,37 @@ class OpinionDetailView(View):
             "comments": comments
         }
         return render(request, "gap/comments.html", context=context)
+
+class UserRegisterView(View):
+    def get(self, request):
+        form = UserRegisterForm()
+        return render (request, "gap/register.html", {'form': form})
+    
+    def post (self, request):
+        form = UserRegisterForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Sucessfully registered")
+            return redirect("gap:login-page")
+        else:
+            return render(request, "gap/register.html", {'form':form})
+        
+class UserLoginView(View):
+    def get(self, request):
+        form = UserLoginForm()
+        return render(request, "gap/login.html", context={"form": form})
+
+    def post(self, request):
+        form = AuthenticationForm(data=request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get("username")
+            password = form.cleaned_data.get("password")
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+                messages.info(request, f"You have logged in as {username}")
+                return redirect("landing_page")
+            else:
+                messages.error(request, "Invalid username or password")
+        else:
+            return render(request, "gap/login.html", {"form": form})
